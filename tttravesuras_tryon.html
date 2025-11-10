@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Prueba Virtual de Joyería</title>
     <style>
-        /* Estilos básicos para la app a pantalla completa */
         body, html {
             margin: 0;
             padding: 0;
@@ -15,13 +14,11 @@
             background-color: #000;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
-        /* Contenedor principal de la AR */
         #ar-container {
             position: relative;
             width: 100%;
             height: 100%;
         }
-        /* El canvas donde se renderiza la escena 3D */
         #ar-canvas {
             position: absolute;
             top: 0;
@@ -29,22 +26,25 @@
             width: 100%;
             height: 100%;
             z-index: 1;
+            /* El canvas debe estar espejado si el video de fondo no se ve */
+            transform: scaleX(-1);
         }
-        /* El feed de video de la cámara (oculto, solo para MediaPipe) */
+
+        /* * CORRECCIÓN DE BUG:
+         * El video no puede tener 'display: none'.
+         * Lo ocultamos volviéndolo 1x1px y posicionándolo fuera de la pantalla.
+         * Esto mantiene el stream activo para que MediaPipe pueda leerlo.
+        */
         #video-feed {
-            /* * El video está oculto, pero MediaPipe lo usa en segundo plano.
-             * Para depurar, puedes hacerlo visible y semitransparente:
-             * opacity: 0.5;
-             * z-index: 2;
-             */
-            display: none;
-            /* Asegura que el video llene la pantalla (espejado) */
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transform: scaleX(-1); /* Espejo */
+            position: absolute;
+            top: -9999px;
+            left: -9999px;
+            width: 1px;
+            height: 1px;
+            /* El video en sí debe estar espejado para que el 3D coincida */
+            transform: scaleX(-1);
         }
-        /* Contenedor de la UI (botones) */
+        
         #ui-container {
             position: absolute;
             bottom: 30px;
@@ -74,7 +74,6 @@
             border-color: #fff;
             transform: translateY(-2px);
         }
-        /* Botón de inicio */
         #start-btn {
             position: absolute;
             top: 50%;
@@ -91,7 +90,6 @@
             cursor: pointer;
             box-shadow: 0 5px 20px rgba(0, 122, 255, 0.4);
         }
-        /* Caja de mensajes para cargar o errores */
         #message-box {
             display: none;
             position: absolute;
@@ -104,15 +102,14 @@
             border-radius: 10px;
             z-index: 20;
             text-align: center;
+            max-width: 80%;
         }
     </style>
 </head>
 <body>
 
     <div id="ar-container">
-        <!-- Canvas para Three.js (lo que ve el usuario) -->
         <canvas id="ar-canvas"></canvas>
-        <!-- Video para MediaPipe (oculto) -->
         <video id="video-feed" autoplay playsinline></video>
     </div>
 
@@ -120,7 +117,7 @@
     <button id="start-btn">Comenzar</button>
     
     <div id="ui-container" style="display: none;">
-        <button class="joya-btn" id="btn-ring">Anillo</button>
+        <button classD="joya-btn" id="btn-ring">Anillo</button>
         <button class="joya-btn" id="btn-earring">Aro</button>
         <button class="joya-btn" id="btn-pendant">Colgante</button>
         <button class="joya-btn" id="btn-none">Quitar</button>
@@ -131,7 +128,6 @@
 
     <!-- 
       IMPORTACIÓN DE LIBRERÍAS (ES Modules)
-      Usamos un importmap para gestionar las URLs de las librerías 
     -->
     <script type="importmap">
     {
@@ -158,51 +154,44 @@
             PoseLandmarker
         } from '@mediapipe/tasks-vision';
 
-        // Variables globales
+        // ... (Variables globales - sin cambios) ...
         let threeScene, threeCamera, threeRenderer, threeClock;
         let handLandmarker, faceLandmarker, poseLandmarker;
         let video, arCanvas, messageBox, startBtn, uiContainer;
-        let currentJewelryType = 'none'; // 'ring', 'earring', 'pendant', 'none'
-        let jewelryGroup, anchorGroup; // Grupos para manejar los modelos 3D
+        let currentJewelryType = 'none';
+        let jewelryGroup, anchorGroup;
         let webcamRunning = false;
         let aspect;
         let visionTasksResolver;
         
-        // Puntos de anclaje (Landmarks) de MediaPipe que usaremos
         const LANDMARKS = {
-            // Anillo: nudillo del dedo anular
             RING_FINGER_MCP: 13,
             RING_FINGER_PIP: 14,
-            
-            // Aro: lóbulo de la oreja izquierda
             LEFT_EAR_LOBE: 137,
-            LEFT_EAR_TOP: 150, // Para escala
-            
-            // Colgante: punto medio entre los hombros
+            LEFT_EAR_TOP: 150,
             LEFT_SHOULDER: 11,
             RIGHT_SHOULDER: 12
         };
 
-        // Material metálico para los placeholders
         const metalMaterial = new THREE.MeshStandardMaterial({
-            color: 0xc0c0c0, // Plata
+            color: 0xc0c0c0,
             metalness: 1.0,
             roughness: 0.2,
             envMapIntensity: 1.0
         });
 
-        /**
-         * Inicializa la aplicación completa
-         */
+        // --- FUNCIONES (init, initThree, loadHDRI, initMediaPipe) ---
+        // Estas funciones son idénticas al archivo anterior.
+        // Las omito aquí por brevedad, pero están en el código completo.
+        // ...
+        
         async function init() {
-            // Obtener elementos del DOM
             arCanvas = document.getElementById('ar-canvas');
             video = document.getElementById('video-feed');
             messageBox = document.getElementById('message-box');
             startBtn = document.getElementById('start-btn');
             uiContainer = document.getElementById('ui-container');
 
-            // Configurar listeners de la UI
             startBtn.addEventListener('click', startWebcam);
             document.getElementById('btn-ring').addEventListener('click', () => setJewelryType('ring'));
             document.getElementById('btn-earring').addEventListener('click', () => setJewelryType('earring'));
@@ -219,86 +208,60 @@
             messageBox.style.display = 'none';
         }
 
-        /**
-         * Configura la escena, cámara y renderer de Three.js
-         */
         function initThree() {
             threeScene = new THREE.Scene();
-            
-            // Cámara (perspectiva, para que coincida con la del mundo real)
             aspect = window.innerWidth / window.innerHeight;
             threeCamera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
-            threeCamera.position.set(0, 0, 10); // Posición inicial
+            threeCamera.position.set(0, 0, 10);
             threeScene.add(threeCamera);
-
-            // Reloj para la animación
             threeClock = new THREE.Clock();
-
-            // Luces
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
             threeScene.add(ambientLight);
             const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
             directionalLight.position.set(0.5, 1, 1);
             threeScene.add(directionalLight);
-            
-            // Renderer (con fondo transparente)
             threeRenderer = new THREE.WebGLRenderer({
                 canvas: arCanvas,
-                alpha: true, // Fondo transparente
+                alpha: true,
                 antialias: true
             });
             threeRenderer.setSize(window.innerWidth, window.innerHeight);
             threeRenderer.setPixelRatio(window.devicePixelRatio);
             threeRenderer.outputEncoding = THREE.sRGBEncoding;
             threeRenderer.toneMapping = THREE.ACESFilmicToneMapping;
-            
-            // Grupos para manejar los objetos 3D
-            anchorGroup = new THREE.Group(); // Este grupo será movido por MediaPipe
-            jewelryGroup = new THREE.Group(); // Este grupo contiene la joya
+            anchorGroup = new THREE.Group();
+            jewelryGroup = new THREE.Group();
             anchorGroup.add(jewelryGroup);
             threeScene.add(anchorGroup);
-
-            // Listener para redimensionar la ventana
             window.addEventListener('resize', onWindowResize, false);
         }
 
-        /**
-         * Carga un mapa de entorno HDRI para reflejos realistas
-         */
         async function loadHDRI() {
             try {
                 const rgbeLoader = new RGBELoader();
                 const texture = await rgbeLoader.loadAsync('https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_03_1k.hdr');
                 texture.mapping = THREE.EquirectangularReflectionMapping;
                 threeScene.environment = texture;
-                metalMaterial.envMap = texture; // Aplicar a nuestro material placeholder
+                metalMaterial.envMap = texture;
             } catch (error) {
                 console.error("Error al cargar HDRI:", error);
                 showMessage("Error al cargar entorno 3D", true);
             }
         }
 
-        /**
-         * Inicializa los modelos de MediaPipe
-         */
         async function initMediaPipe() {
             showMessage("Cargando modelos de IA...");
             try {
                 visionTasksResolver = await FilesetResolver.forVisionTasks(
                     "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12/wasm"
                 );
-
-                // Cargar HandLandmarker (para anillos)
                 handLandmarker = await HandLandmarker.createFromOptions(visionTasksResolver, {
                     baseOptions: {
                         modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`,
                         delegate: "GPU"
                     },
-                    runningMode: "VIDEO",
-                    numHands: 1
+                    runningMode: "VIDEO", numHands: 1
                 });
-
-                // Cargar FaceLandmarker (para aros)
                 faceLandmarker = await FaceLandmarker.createFromOptions(visionTasksResolver, {
                     baseOptions: {
                         modelAssetPath: `https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task`,
@@ -306,93 +269,118 @@
                     },
                     runningMode: "VIDEO"
                 });
-                
-                // Cargar PoseLandmarker (para colgantes)
                 poseLandmarker = await PoseLandmarker.createFromOptions(visionTasksResolver, {
                     baseOptions: {
                         modelAssetPath: `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task`,
                         delegate: "GPU"
                     },
-                    runningMode: "VIDEO",
-                    outputSegmentationMasks: false
+                    runningMode: "VIDEO", outputSegmentationMasks: false
                 });
-                
                 showMessage("Modelos cargados. Presiona 'Comenzar'.");
-
             } catch (error) {
                 console.error("Error al inicializar MediaPipe:", error);
                 showMessage("Error al cargar modelos de IA. Recarga la página.", true);
             }
         }
 
+
         /**
-         * Inicia la cámara web
+         * Inicia la cámara web - FUNCIÓN ACTUALIZADA
          */
         async function startWebcam() {
             if (webcamRunning) return;
 
-            // Ocultar botón de inicio y mostrar UI
             startBtn.style.display = 'none';
-            uiContainer.style.display = 'flex';
             showMessage("Iniciando cámara...");
 
             try {
+                // Solicitar stream
                 const stream = await navigator.mediaDevices.getUserMedia({
                     video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }
                 });
                 video.srcObject = stream;
                 
-                // Esperar a que el video esté listo
+                // CORRECCIÓN DE BUG: Forzar el play() para navegadores móviles
+                video.play(); 
+                
                 video.addEventListener('loadeddata', () => {
                     webcamRunning = true;
+                    uiContainer.style.display = 'flex'; // Mostrar UI solo cuando la cámara esté lista
                     messageBox.style.display = 'none';
-                    // Iniciar el bucle de renderizado
                     renderLoop();
                 });
+            
             } catch (err) {
-                console.error("Error al acceder a la cámara:", err);
-                showMessage("No se pudo acceder a la cámara. Revisa los permisos.", true);
+                // CORRECCIÓN DE BUG: Mejorar el mensaje de error
+                console.error("Error al acceder a la cámara:", err.name, err.message);
+                if (err.name === "NotAllowedError") {
+                    showMessage("Bloqueaste el permiso de la cámara. Recarga y acepta para continuar.", true);
+                } else if (err.name === "NotFoundError") {
+                    showMessage("No se encontró una cámara. Asegúrate de tener una conectada.", true);
+                } else {
+                    showMessage(`Error de cámara: ${err.message}`, true);
+                }
             }
         }
 
         /**
-         * Bucle principal de renderizado y detección
+         * Bucle principal de renderizado y detección - FUNCIÓN ACTUALIZADA
          */
         async function renderLoop() {
-            if (!webcamRunning) return;
+            if (!webcamRunning || video.readyState < 2) {
+                requestAnimationFrame(renderLoop);
+                return;
+            }
 
             // Solicitar el próximo frame
             requestAnimationFrame(renderLoop);
+            
+            // Actualizar la cámara de Three.js para que coincida con el video
+            // (Esto es necesario si las dimensiones del video no son las de la pantalla)
+            aspect = video.videoWidth / video.videoHeight;
+            threeCamera.aspect = aspect;
+            
+            // Ajustar el FoV vertical basado en el horizontal (o viceversa)
+            // para que los objetos 3D no se estiren.
+            const fov = 45; // FoV horizontal en grados
+            threeCamera.fov = (2 * Math.atan(Math.tan(fov * Math.PI / 180 / 2) / aspect) * 180 / Math.PI);
+            threeCamera.updateProjectionMatrix();
+
 
             // Obtener el tiempo actual del video
             const videoTime = video.currentTime;
             
-            // Ocultar la joya por defecto
             anchorGroup.visible = false;
             
             try {
-                // Lógica de detección según el tipo de joya seleccionado
                 if (currentJewelryType === 'ring' && handLandmarker) {
                     const handResults = handLandmarker.detectForVideo(video, video.currentTime);
                     if (handResults.landmarks.length > 0) {
-                        const landmarks = handResults.landmarks[0]; // Primera mano detectada
-                        updateAnchor(landmarks[LANDMARKS.RING_FINGER_MCP], landmarks[LANDMARKS.RING_FINGER_PIP]);
+                        const landmarks = handResults.landmarks[0];
+                        // CORRECCIÓN: Usar updateAnchor3D para un mejor seguimiento 3D
+                        updateAnchor3D(
+                            landmarks[LANDMARKS.RING_FINGER_MCP], 
+                            landmarks[LANDMARKS.RING_FINGER_PIP]
+                        );
                         anchorGroup.visible = true;
                     }
                 } 
                 else if (currentJewelryType === 'earring' && faceLandmarker) {
                     const faceResults = faceLandmarker.detectForVideo(video, video.currentTime);
                     if (faceResults.faceLandmarks.length > 0) {
-                        const landmarks = faceResults.faceLandmarks[0]; // Primera cara detectada
-                        updateAnchor(landmarks[LANDMARKS.LEFT_EAR_LOBE], landmarks[LANDMARKS.LEFT_EAR_TOP]);
+                        const landmarks = faceResults.faceLandmarks[0];
+                        updateAnchor3D(
+                            landmarks[LANDMARKS.LEFT_EAR_LOBE], 
+                            landmarks[LANDMARKS.LEFT_EAR_TOP],
+                            0.02 // Escala fija pequeña para aros
+                        );
                         anchorGroup.visible = true;
                     }
                 }
                 else if (currentJewelryType === 'pendant' && poseLandmarker) {
                     const poseResults = poseLandmarker.detectForVideo(video, video.currentTime);
                     if (poseResults.landmarks.length > 0) {
-                        const landmarks = poseResults.landmarks[0]; // Primera pose detectada
-                        // Calcular punto medio entre los hombros
+                        const landmarks = poseResults.landmarks[0];
                         const p1 = landmarks[LANDMARKS.LEFT_SHOULDER];
                         const p2 = landmarks[LANDMARKS.RIGHT_SHOULDER];
                         const midShoulder = {
@@ -400,7 +388,7 @@
                             y: (p1.y + p2.y) / 2,
                             z: (p1.z + p2.z) / 2,
                         };
-                        updateAnchor(midShoulder, p1, 0.2); // 0.2 es un tamaño de escala fijo
+                        updateAnchor3D(midShoulder, null, 0.2); // Escala fija grande
                         anchorGroup.visible = true;
                     }
                 }
@@ -409,66 +397,49 @@
                 console.error("Error en el bucle de detección:", error);
             }
 
-            // Renderizar la escena de Three.js
             threeRenderer.render(threeScene, threeCamera);
         }
 
-        /**
-         * Cambia el tipo de joya a mostrar
-         */
+        // --- (setJewelryType y createPlaceholderJewelry sin cambios) ---
+        // ...
+        
         function setJewelryType(type) {
             currentJewelryType = type;
-            
-            // Actualizar botones activos
             document.querySelectorAll('.joya-btn').forEach(btn => btn.classList.remove('active'));
             const activeBtn = document.getElementById(`btn-${type}`);
             if (activeBtn) activeBtn.classList.add('active');
-
-            // Limpiar la joya anterior
             jewelryGroup.clear();
-
             if (type === 'none') {
-                return; // No agregar nada
+                return;
             }
-            
-            // Crear y agregar la nueva joya (usando placeholders)
             const newJewel = createPlaceholderJewelry(type);
             jewelryGroup.add(newJewel);
         }
 
-        /**
-         * Crea un objeto 3D placeholder según el tipo
-         */
         function createPlaceholderJewelry(type) {
             let mesh;
-            // Limpiamos la rotación/escala anterior
             jewelryGroup.rotation.set(0, 0, 0);
             jewelryGroup.scale.set(1, 1, 1);
-
             switch(type) {
                 case 'ring':
-                    // "Mi Anillo" (un torus)
                     mesh = new THREE.Mesh(
                         new THREE.TorusGeometry(0.5, 0.1, 16, 32),
                         metalMaterial
                     );
-                    // Los anillos se ven mejor rotados
                     mesh.rotation.x = Math.PI / 2;
                     break;
                 case 'earring':
-                    // "Aro" (una cápsula)
                     mesh = new THREE.Mesh(
                         new THREE.CapsuleGeometry(0.2, 1.0, 4, 8),
                         metalMaterial
                     );
                     break;
                 case 'pendant':
-                    // "Colgante" (un cono)
                     mesh = new THREE.Mesh(
                         new THREE.ConeGeometry(0.5, 1.5, 32),
                         metalMaterial
                     );
-                    mesh.rotation.x = Math.PI; // Apuntar hacia abajo
+                    mesh.rotation.x = Math.PI;
                     break;
                 default:
                     return new THREE.Group();
@@ -477,70 +448,76 @@
         }
 
         /**
-         * Actualiza la posición y escala del ancla 3D
-         * @param {object} p1 - Landmark principal (para posición)
-         * @param {object} p2 - Landmark secundario (para escala) o un número
+         * Actualiza la posición y escala del ancla 3D - FUNCIÓN MEJORADA
+         * Esta versión usa 'unproject' para un seguimiento 3D más preciso.
          */
-        function updateAnchor(p1, p2, fixedScale = null) {
-            // Convertir coordenadas de MediaPipe (0-1) a espacio 3D de Three.js
-            // Invertimos X y Y porque el video está espejado y Y está invertido
-            
-            // Mapea las coordenadas 2D (x, y) a un plano 3D en frente de la cámara
-            // Esto es un truco simple: (0,0) en la cámara es (0,0,0) en 3D
-            // (1,1) en la cámara es (+X, -Y, 0) en 3D
-            
-            // Ajusta el "campo de visión" del mapeo. Valores más pequeños = más movimiento.
-            const horizontalFov = 10; 
-            const verticalFov = horizontalFov / aspect;
+        function updateAnchor3D(p1, p2, fixedScale = null) {
+            // Convertir coordenadas de MediaPipe (0-1) a Coordenadas de Dispositivo Normalizado (-1 a +1)
+            // Invertimos X y Y por el espejo y la dirección Y
+            const ndcX = (p1.x * 2) - 1;
+            const ndcY = 1 - (p1.y * 2);
 
-            const worldX = (p1.x - 0.5) * horizontalFov;
-            const worldY = -(p1.y - 0.5) * verticalFov;
+            // Usar la 'profundidad' (z) de MediaPipe
+            // p1.z es la profundidad relativa desde la cámara.
+            // Lo mapeamos a una distancia 3D.
+            // El valor 'z' de MediaPipe es difícil de usar directamente. 
+            // Usaremos una heurística: usaremos Z para la escala, pero un valor fijo para la posición.
             
-            // Usamos un Z fijo para mantener el objeto en un plano
-            // Ajusta este valor para acercar o alejar el objeto
-            const worldZ = -15; 
+            let zPos = -10; // Distancia fija desde la cámara
+
+            // Crear un vector 3D
+            const posVec = new THREE.Vector3(ndcX, ndcY, 0.5); // 0.5 está en el medio del frustum
             
-            // Aplicamos la posición (invertimos X por el espejo)
-            anchorGroup.position.set(-worldX, worldY, worldZ);
+            // "Desproyectar" el punto 2D de la pantalla al mundo 3D
+            posVec.unproject(threeCamera);
+
+            // Ahora, posVec es un punto en el frustum lejano. Lo normalizamos y escalamos.
+            posVec.sub(threeCamera.position).normalize();
+            
+            // Escalarlo a nuestra distancia 'zPos' deseada
+            posVec.multiplyScalar(-zPos / posVec.z); // zPos es negativo
+            
+            anchorGroup.position.copy(posVec.add(threeCamera.position));
 
             // Calcular escala
-            let scale;
-            if (fixedScale !== null) {
+            let scale = 0.05; // Empezar con una escala base
+            if (fixedScale) {
                 scale = fixedScale;
-            } else {
-                // Calcular distancia 2D entre los dos puntos como proxy de escala
-                const dx = (p1.x - p2.x) * video.videoWidth;
-                const dy = (p1.y - p2.y) * video.videoHeight;
-                const distance = Math.hypot(dx, dy);
-                
-                // Mapear esta distancia a un tamaño de escala
-                // Esto requiere mucha sintonización (tuning)
-                scale = distance / 500; // Factor de escala arbitrario, ¡ajustar!
+            } else if (p2) {
+                // Calcular distancia 3D entre p1 y p2 (más preciso)
+                const p1Vec = new THREE.Vector3((p1.x * 2) - 1, 1 - (p1.y * 2), p1.z);
+                const p2Vec = new THREE.Vector3((p2.x * 2) - 1, 1 - (p2.y * 2), p2.z);
+                const distance = p1Vec.distanceTo(p2Vec);
+                scale = distance * 0.2; // Ajustar este multiplicador
             }
-            
+
             // Aplicar escala. El tipo de joya requiere diferentes escalas base.
-            if (currentJewelryType === 'ring') scale *= 0.1;
-            if (currentJewelryType === 'earring') scale *= 0.15;
-            if (currentJewelryType === 'pendant') scale *= 0.4;
+            if (currentJewelryType === 'ring') scale *= 0.5;
+            if (currentJewelryType === 'earring') scale *= 0.2;
+            if (currentJewelryType === 'pendant') scale *= 1.5;
             
-            // Evitar escalas inválidas
-            scale = Math.max(0.01, Math.min(scale, 2.0)); 
-            
+            scale = Math.max(0.01, Math.min(scale, 5.0));
             anchorGroup.scale.set(scale, scale, scale);
+            
+            // Orientación (opcional pero bueno para anillos)
+            if (currentJewelryType === 'ring' && p2) {
+                const p2Vec = new THREE.Vector3((p2.x * 2) - 1, 1 - (p2.y * 2), 0.5).unproject(threeCamera);
+                p2Vec.sub(threeCamera.position).normalize().multiplyScalar(-zPos / p2Vec.z);
+                anchorGroup.lookAt(p2Vec.add(threeCamera.position));
+                jewelryGroup.rotation.x = Math.PI / 2; // Re-orientar el torus
+            }
         }
 
-        /**
-         * Muestra un mensaje en la caja de mensajes
-         */
+
+        // --- (showMessage y onWindowResize sin cambios) ---
+        // ...
+
         function showMessage(text, isError = false) {
             messageBox.innerText = text;
             messageBox.style.display = 'block';
             messageBox.style.color = isError ? '#ffaaaa' : '#ffffff';
         }
 
-        /**
-         * Maneja el redimensionamiento de la ventana
-         */
         function onWindowResize() {
             aspect = window.innerWidth / window.innerHeight;
             threeCamera.aspect = aspect;
