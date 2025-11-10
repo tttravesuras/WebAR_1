@@ -117,7 +117,7 @@
     <button id="start-btn">Comenzar</button>
     
     <div id="ui-container" style="display: none;">
-        <button classD="joya-btn" id="btn-ring">Anillo</button>
+        <button class="joya-btn" id="btn-ring">Anillo</button>
         <button class="joya-btn" id="btn-earring">Aro</button>
         <button class="joya-btn" id="btn-pendant">Colgante</button>
         <button class="joya-btn" id="btn-none">Quitar</button>
@@ -154,7 +154,7 @@
             PoseLandmarker
         } from '@mediapipe/tasks-vision';
 
-        // ... (Variables globales - sin cambios) ...
+        // Variables globales
         let threeScene, threeCamera, threeRenderer, threeClock;
         let handLandmarker, faceLandmarker, poseLandmarker;
         let video, arCanvas, messageBox, startBtn, uiContainer;
@@ -180,10 +180,6 @@
             envMapIntensity: 1.0
         });
 
-        // --- FUNCIONES (init, initThree, loadHDRI, initMediaPipe) ---
-        // Estas funciones son idénticas al archivo anterior.
-        // Las omito aquí por brevedad, pero están en el código completo.
-        // ...
         
         async function init() {
             arCanvas = document.getElementById('ar-canvas');
@@ -257,7 +253,7 @@
                 );
                 handLandmarker = await HandLandmarker.createFromOptions(visionTasksResolver, {
                     baseOptions: {
-                        modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`,
+                        modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmark/hand_landmarker/float16/1/hand_landmarker.task`,
                         delegate: "GPU"
                     },
                     runningMode: "VIDEO", numHands: 1
@@ -277,16 +273,13 @@
                     runningMode: "VIDEO", outputSegmentationMasks: false
                 });
                 showMessage("Modelos cargados. Presiona 'Comenzar'.");
-            } catch (error) {
+            } catch (error)S {
                 console.error("Error al inicializar MediaPipe:", error);
                 showMessage("Error al cargar modelos de IA. Recarga la página.", true);
             }
         }
 
 
-        /**
-         * Inicia la cámara web - FUNCIÓN ACTUALIZADA
-         */
         async function startWebcam() {
             if (webcamRunning) return;
 
@@ -294,24 +287,21 @@
             showMessage("Iniciando cámara...");
 
             try {
-                // Solicitar stream
                 const stream = await navigator.mediaDevices.getUserMedia({
                     video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }
                 });
                 video.srcObject = stream;
                 
-                // CORRECCIÓN DE BUG: Forzar el play() para navegadores móviles
                 video.play(); 
                 
                 video.addEventListener('loadeddata', () => {
                     webcamRunning = true;
-                    uiContainer.style.display = 'flex'; // Mostrar UI solo cuando la cámara esté lista
+                    uiContainer.style.display = 'flex'; 
                     messageBox.style.display = 'none';
                     renderLoop();
                 });
             
             } catch (err) {
-                // CORRECCIÓN DE BUG: Mejorar el mensaje de error
                 console.error("Error al acceder a la cámara:", err.name, err.message);
                 if (err.name === "NotAllowedError") {
                     showMessage("Bloqueaste el permiso de la cámara. Recarga y acepta para continuar.", true);
@@ -323,31 +313,28 @@
             }
         }
 
-        /**
-         * Bucle principal de renderizado y detección - FUNCIÓN ACTUALIZADA
-         */
         async function renderLoop() {
             if (!webcamRunning || video.readyState < 2) {
                 requestAnimationFrame(renderLoop);
                 return;
             }
 
-            // Solicitar el próximo frame
             requestAnimationFrame(renderLoop);
             
-            // Actualizar la cámara de Three.js para que coincida con el video
-            // (Esto es necesario si las dimensiones del video no son las de la pantalla)
+            if (video.videoWidth !== video.videoWidth) {
+                onWindowResize(); // Actualiza el aspect ratio si cambia el video
+            }
+
             aspect = video.videoWidth / video.videoHeight;
-            threeCamera.aspect = aspect;
             
-            // Ajustar el FoV vertical basado en el horizontal (o viceversa)
-            // para que los objetos 3D no se estiren.
-            const fov = 45; // FoV horizontal en grados
-            threeCamera.fov = (2 * Math.atan(Math.tan(fov * Math.PI / 180 / 2) / aspect) * 180 / Math.PI);
-            threeCamera.updateProjectionMatrix();
+            if (threeCamera.aspect !== aspect) {
+                threeCamera.aspect = aspect;
+                const fov = 45; 
+                threeCamera.fov = (2 * Math.atan(Math.tan(fov * Math.PI / 180 / 2) / aspect) * 180 / Math.PI);
+                threeCamera.updateProjectionMatrix();
+            }
 
 
-            // Obtener el tiempo actual del video
             const videoTime = video.currentTime;
             
             anchorGroup.visible = false;
@@ -357,7 +344,6 @@
                     const handResults = handLandmarker.detectForVideo(video, video.currentTime);
                     if (handResults.landmarks.length > 0) {
                         const landmarks = handResults.landmarks[0];
-                        // CORRECCIÓN: Usar updateAnchor3D para un mejor seguimiento 3D
                         updateAnchor3D(
                             landmarks[LANDMARKS.RING_FINGER_MCP], 
                             landmarks[LANDMARKS.RING_FINGER_PIP]
@@ -400,8 +386,6 @@
             threeRenderer.render(threeScene, threeCamera);
         }
 
-        // --- (setJewelryType y createPlaceholderJewelry sin cambios) ---
-        // ...
         
         function setJewelryType(type) {
             currentJewelryType = type;
@@ -447,51 +431,33 @@
             return mesh;
         }
 
-        /**
-         * Actualiza la posición y escala del ancla 3D - FUNCIÓN MEJORADA
-         * Esta versión usa 'unproject' para un seguimiento 3D más preciso.
-         */
+        
         function updateAnchor3D(p1, p2, fixedScale = null) {
-            // Convertir coordenadas de MediaPipe (0-1) a Coordenadas de Dispositivo Normalizado (-1 a +1)
-            // Invertimos X y Y por el espejo y la dirección Y
+            
             const ndcX = (p1.x * 2) - 1;
             const ndcY = 1 - (p1.y * 2);
 
-            // Usar la 'profundidad' (z) de MediaPipe
-            // p1.z es la profundidad relativa desde la cámara.
-            // Lo mapeamos a una distancia 3D.
-            // El valor 'z' de MediaPipe es difícil de usar directamente. 
-            // Usaremos una heurística: usaremos Z para la escala, pero un valor fijo para la posición.
-            
-            let zPos = -10; // Distancia fija desde la cámara
+            let zPos = -10; 
 
-            // Crear un vector 3D
-            const posVec = new THREE.Vector3(ndcX, ndcY, 0.5); // 0.5 está en el medio del frustum
+            const posVec = new THREE.Vector3(ndcX, ndcY, 0.5); 
             
-            // "Desproyectar" el punto 2D de la pantalla al mundo 3D
             posVec.unproject(threeCamera);
-
-            // Ahora, posVec es un punto en el frustum lejano. Lo normalizamos y escalamos.
             posVec.sub(threeCamera.position).normalize();
-            
-            // Escalarlo a nuestra distancia 'zPos' deseada
-            posVec.multiplyScalar(-zPos / posVec.z); // zPos es negativo
+            posVec.multiplyScalar(-zPos / posVec.z); 
             
             anchorGroup.position.copy(posVec.add(threeCamera.position));
 
             // Calcular escala
-            let scale = 0.05; // Empezar con una escala base
+            let scale = 0.05; 
             if (fixedScale) {
                 scale = fixedScale;
             } else if (p2) {
-                // Calcular distancia 3D entre p1 y p2 (más preciso)
                 const p1Vec = new THREE.Vector3((p1.x * 2) - 1, 1 - (p1.y * 2), p1.z);
                 const p2Vec = new THREE.Vector3((p2.x * 2) - 1, 1 - (p2.y * 2), p2.z);
                 const distance = p1Vec.distanceTo(p2Vec);
                 scale = distance * 0.2; // Ajustar este multiplicador
             }
 
-            // Aplicar escala. El tipo de joya requiere diferentes escalas base.
             if (currentJewelryType === 'ring') scale *= 0.5;
             if (currentJewelryType === 'earring') scale *= 0.2;
             if (currentJewelryType === 'pendant') scale *= 1.5;
@@ -499,18 +465,17 @@
             scale = Math.max(0.01, Math.min(scale, 5.0));
             anchorGroup.scale.set(scale, scale, scale);
             
-            // Orientación (opcional pero bueno para anillos)
             if (currentJewelryType === 'ring' && p2) {
                 const p2Vec = new THREE.Vector3((p2.x * 2) - 1, 1 - (p2.y * 2), 0.5).unproject(threeCamera);
                 p2Vec.sub(threeCamera.position).normalize().multiplyScalar(-zPos / p2Vec.z);
                 anchorGroup.lookAt(p2Vec.add(threeCamera.position));
                 jewelryGroup.rotation.x = Math.PI / 2; // Re-orientar el torus
+            } else {
+                // Asegurarse de que los otros objetos miren a la cámara
+                anchorGroup.lookAt(threeCamera.position);
             }
         }
 
-
-        // --- (showMessage y onWindowResize sin cambios) ---
-        // ...
 
         function showMessage(text, isError = false) {
             messageBox.innerText = text;
