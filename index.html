@@ -2,499 +2,169 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Prueba Virtual de Joyería</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tttravesuras - Catálogo</title>
+    
+    <!-- 1. Importar las tipografías que elegiste -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ibarra+Real+Nova:ital,wght@0,400;1,400&family=Kalnia:wght@500&display=swap" rel="stylesheet">
+
     <style>
-        body, html {
+        /* 2. Aplicar la estética de tu diseño y branding */
+        body {
+            /* Usamos el color de texto Negro Inconsciente */
+            color: #121212; 
+            /* Usamos la tipografía base Ritualista */
+            font-family: 'Ibarra Real Nova', serif;
+            background-color: #FFFFFF; /* Fondo blanco limpio como tu imagen */
             margin: 0;
-            padding: 0;
-            overflow: hidden;
-            width: 100vw;
-            height: 100vh;
-            background-color: #000;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-        #ar-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-        }
-        #ar-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            /* El canvas debe estar espejado si el video de fondo no se ve */
-            transform: scaleX(-1);
+            padding: 40px 20px;
         }
 
-        /* * CORRECCIÓN DE BUG:
-         * El video no puede tener 'display: none'.
-         * Lo ocultamos volviéndolo 1x1px y posicionándolo fuera de la pantalla.
-         * Esto mantiene el stream activo para que MediaPipe pueda leerlo.
-        */
-        #video-feed {
-            position: absolute;
-            top: -9999px;
-            left: -9999px;
-            width: 1px;
-            height: 1px;
-            /* El video en sí debe estar espejado para que el 3D coincida */
-            transform: scaleX(-1);
+        /* Contenedor principal del catálogo */
+        .catalogo-container {
+            max-width: 900px;
+            margin: 0 auto;
+            display: grid;
+            /* Una grilla de una columna, con espacio entre productos */
+            grid-template-columns: 1fr;
+            gap: 60px; /* Espacio entre cada producto */
         }
-        
-        #ui-container {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 10;
+
+        /* Cada item de producto */
+        .producto-item {
             display: flex;
-            gap: 12px;
-            background: rgba(0, 0, 0, 0.4);
-            padding: 12px;
-            border-radius: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            flex-direction: column; /* Apilado en móvil */
+            gap: 20px;
+            align-items: center;
         }
-        .joya-btn {
-            padding: 12px 18px;
-            font-size: 16px;
-            font-weight: 600;
-            color: #fff;
-            background-color: #333;
-            border: 2px solid #555;
-            border-radius: 15px;
-            cursor: pointer;
-            transition: all 0.2s ease;
+
+        /* La imagen del producto */
+        .producto-imagen {
+            flex-shrink: 0;
+            width: 100%; /* Ocupa todo el ancho en móvil */
+            max-width: 300px; /* Límite de tamaño */
         }
-        .joya-btn:hover, .joya-btn.active {
-            background-color: #5e5e5e;
-            border-color: #fff;
-            transform: translateY(-2px);
+
+        .producto-imagen img {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 1 / 1; /* Imagen cuadrada */
+            object-fit: cover;
+            background-color: #E6E0FF; /* Color Lienzo Onírico de fondo */
         }
-        #start-btn {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 10;
-            padding: 20px 30px;
-            font-size: 18px;
-            font-weight: bold;
-            color: #fff;
-            background: linear-gradient(145deg, #007aff, #00458e);
-            border: none;
-            border-radius: 15px;
-            cursor: pointer;
-            box-shadow: 0 5px 20px rgba(0, 122, 255, 0.4);
+
+        /* La información del producto */
+        .producto-info {
+            text-align: center; /* Centrado en móvil */
         }
-        #message-box {
-            display: none;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 25px;
-            border-radius: 10px;
-            z-index: 20;
-            text-align: center;
-            max-width: 80%;
+
+        /* Título de la pieza (CÓMPLICE) */
+        .producto-info h2 {
+            /* Usamos la tipografía Vanguardista/Elegante */
+            font-family: 'Kalnia', serif;
+            font-size: 2.5rem; /* 40px */
+            font-weight: 500;
+            text-transform: uppercase;
+            margin: 0 0 5px 0;
+            color: #121212;
+        }
+
+        /* Descripción técnica (Anillo de plata...) */
+        .producto-info .descripcion {
+            font-family: 'Ibarra Real Nova', serif;
+            font-style: italic;
+            font-size: 1.125rem; /* 18px */
+            color: #555;
+            margin: 0 0 15px 0;
+        }
+
+        /* Texto catalizador (Ahora, la travesura...) */
+        .producto-info .catalizador {
+            font-family: 'Ibarra Real Nova', serif;
+            font-size: 1.25rem; /* 20px */
+            color: #333;
+            margin: 0;
+        }
+
+        /* 3. Adaptación para pantallas grandes (Desktop) */
+        @media (min-width: 768px) {
+            body {
+                padding: 80px 40px;
+            }
+
+            .producto-item {
+                /* El layout de tu imagen: imagen a la izq, texto a la der */
+                flex-direction: row; 
+                text-align: left; /* Alineado a la izquierda en desktop */
+                gap: 40px; /* Más espacio */
+                align-items: flex-start; /* Alinear al inicio */
+            }
+
+            .producto-imagen {
+                width: 300px; /* Tamaño fijo en desktop */
+            }
         }
     </style>
 </head>
 <body>
 
-    <div id="ar-container">
-        <canvas id="ar-canvas"></canvas>
-        <video id="video-feed" autoplay playsinline></video>
-    </div>
+    <div class="catalogo-container">
 
-    <!-- UI -->
-    <button id="start-btn">Comenzar</button>
-    
-    <div id="ui-container" style="display: none;">
-        <button class="joya-btn" id="btn-ring">Anillo</button>
-        <button class="joya-btn" id="btn-earring">Aro</button>
-        <button class="joya-btn" id="btn-pendant">Colgante</button>
-        <button class="joya-btn" id="btn-none">Quitar</button>
-    </div>
+        <!-- Producto 1: CÓMPLICE -->
+        <div class="producto-item">
+            <div class="producto-imagen">
+                <!-- Reemplaza este 'src' con la URL de tu foto -->
+                <img src="https://placehold.co/400x400/121212/E6E0FF?text=C%C3%93MPLICE" alt="Anillo Cómplice">
+            </div>
+            <div class="producto-info">
+                <h2>CÓMPLICE</h2>
+                <p class="descripcion">(Anillo de plata 950)</p>
+                <p class="catalizador">Ahora, la travesura es tuya. ¿Qué ves?</p>
+            </div>
+        </div>
 
-    <!-- Caja de Mensajes -->
-    <div id="message-box">Cargando modelos...</div>
+        <!-- Producto 2: Flow -->
+        <div class="producto-item">
+            <div class="producto-imagen">
+                <!-- Reemplaza este 'src' con la URL de tu foto -->
+                <img src="https://placehold.co/400x400/121212/E6E0FF?text=Flow" alt="Anillo Flow">
+            </div>
+            <div class="producto-info">
+                <h2>Flow</h2>
+                <p class="descripcion">(Anillo de bronce, fluido)</p>
+                <p class="catalizador">Ahora, la travesura es tuya. ¿Qué ves?</p>
+            </div>
+        </div>
 
-    <!-- 
-      IMPORTACIÓN DE LIBRERÍAS (ES Modules)
-    -->
-    <script type="importmap">
-    {
-      "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.js",
-        "three/addons/loaders/GLTFLoader.js": "https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/loaders/GLTFLoader.js",
-        "three/addons/loaders/RGBELoader.js": "https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/loaders/RGBELoader.js",
-        "@mediapipe/tasks-vision": "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12/build/vision_bundle.js"
-      }
-    }
-    </script>
+        <!-- Producto 3: Lux -->
+        <div class="producto-item">
+            <div class="producto-imagen">
+                <!-- Reemplaza este 'src' con la URL de tu foto -->
+                <img src="https://placehold.co/400x400/121212/E6E0FF?text=Lux" alt="Colgante Lux">
+            </div>
+            <div class="producto-info">
+                <h2>Lux</h2>
+                <p class="descripcion">(Colgante de bronce)</p>
+                <p class="catalizador">Ahora, la travesura es tuya. ¿Qué ves?</p>
+            </div>
+        </div>
 
-    <!-- LÓGICA DE LA APLICACIÓN -->
-    <script type="module">
-        // Importaciones de Three.js y MediaPipe
-        import * as THREE from 'three';
-        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-        import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
-        import {
-            FilesetResolver,
-            VisionRunningMode,
-            HandLandmarker,
-            FaceLandmarker,
-            PoseLandmarker
-        } from '@mediapipe/tasks-vision';
+        <!-- Producto 4: tttravesuras -->
+        <div class="producto-item">
+            <div class="producto-imagen">
+                <!-- Reemplaza este 'src' con la URL de tu foto -->
+                <img src="https://placehold.co/400x400/121212/E6E0FF?text=tttravesuras" alt="Colgante tttravesuras">
+            </div>
+            <div class="producto-info">
+                <h2>tttravesuras</h2>
+                <p class="descripcion">(Colgante de plata 950)</p>
+                <p class="catalizador">Ahora, la travesura es tuya. ¿Qué ves?</p>
+            </div>
+        </div>
 
-        // Variables globales
-        let threeScene, threeCamera, threeRenderer, threeClock;
-        let handLandmarker, faceLandmarker, poseLandmarker;
-        let video, arCanvas, messageBox, startBtn, uiContainer;
-        let currentJewelryType = 'none';
-        let jewelryGroup, anchorGroup;
-        let webcamRunning = false;
-        let aspect;
-        let visionTasksResolver;
-        
-        const LANDMARKS = {
-            RING_FINGER_MCP: 13,
-            RING_FINGER_PIP: 14,
-            LEFT_EAR_LOBE: 137,
-            LEFT_EAR_TOP: 150,
-            LEFT_SHOULDER: 11,
-            RIGHT_SHOULDER: 12
-        };
-
-        const metalMaterial = new THREE.MeshStandardMaterial({
-            color: 0xc0c0c0,
-            metalness: 1.0,
-            roughness: 0.2,
-            envMapIntensity: 1.0
-        });
-
-        
-        async function init() {
-            arCanvas = document.getElementById('ar-canvas');
-            video = document.getElementById('video-feed');
-            messageBox = document.getElementById('message-box');
-            startBtn = document.getElementById('start-btn');
-            uiContainer = document.getElementById('ui-container');
-
-            startBtn.addEventListener('click', startWebcam);
-            document.getElementById('btn-ring').addEventListener('click', () => setJewelryType('ring'));
-            document.getElementById('btn-earring').addEventListener('click', () => setJewelryType('earring'));
-            document.getElementById('btn-pendant').addEventListener('click', () => setJewelryType('pendant'));
-            document.getElementById('btn-none').addEventListener('click', () => setJewelryType('none'));
-
-            showMessage("Inicializando...");
-            
-            initThree();
-            await loadHDRI();
-            await initMediaPipe();
-            
-            startBtn.style.display = 'block';
-            messageBox.style.display = 'none';
-        }
-
-        function initThree() {
-            threeScene = new THREE.Scene();
-            aspect = window.innerWidth / window.innerHeight;
-            threeCamera = new THREE.PerspectiveCamera(45, aspect, 0.1, 1000);
-            threeCamera.position.set(0, 0, 10);
-            threeScene.add(threeCamera);
-            threeClock = new THREE.Clock();
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
-            threeScene.add(ambientLight);
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-            directionalLight.position.set(0.5, 1, 1);
-            threeScene.add(directionalLight);
-            threeRenderer = new THREE.WebGLRenderer({
-                canvas: arCanvas,
-                alpha: true,
-                antialias: true
-            });
-            threeRenderer.setSize(window.innerWidth, window.innerHeight);
-            threeRenderer.setPixelRatio(window.devicePixelRatio);
-            threeRenderer.outputEncoding = THREE.sRGBEncoding;
-            threeRenderer.toneMapping = THREE.ACESFilmicToneMapping;
-            anchorGroup = new THREE.Group();
-            jewelryGroup = new THREE.Group();
-            anchorGroup.add(jewelryGroup);
-            threeScene.add(anchorGroup);
-            window.addEventListener('resize', onWindowResize, false);
-        }
-
-        async function loadHDRI() {
-            try {
-                const rgbeLoader = new RGBELoader();
-                const texture = await rgbeLoader.loadAsync('https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_03_1k.hdr');
-                texture.mapping = THREE.EquirectangularReflectionMapping;
-                threeScene.environment = texture;
-                metalMaterial.envMap = texture;
-            } catch (error) {
-                console.error("Error al cargar HDRI:", error);
-                showMessage("Error al cargar entorno 3D", true);
-            }
-        }
-
-        async function initMediaPipe() {
-            showMessage("Cargando modelos de IA...");
-            try {
-                visionTasksResolver = await FilesetResolver.forVisionTasks(
-                    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12/wasm"
-                );
-                handLandmarker = await HandLandmarker.createFromOptions(visionTasksResolver, {
-                    baseOptions: {
-                        modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmark/hand_landmarker/float16/1/hand_landmarker.task`,
-                        delegate: "GPU"
-                    },
-                    runningMode: "VIDEO", numHands: 1
-                });
-                faceLandmarker = await FaceLandmarker.createFromOptions(visionTasksResolver, {
-                    baseOptions: {
-                        modelAssetPath: `https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task`,
-                        delegate: "GPU"
-                    },
-                    runningMode: "VIDEO"
-                });
-                poseLandmarker = await PoseLandmarker.createFromOptions(visionTasksResolver, {
-                    baseOptions: {
-                        modelAssetPath: `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task`,
-                        delegate: "GPU"
-                    },
-                    runningMode: "VIDEO", outputSegmentationMasks: false
-                });
-                showMessage("Modelos cargados. Presiona 'Comenzar'.");
-            } catch (error)S {
-                console.error("Error al inicializar MediaPipe:", error);
-                showMessage("Error al cargar modelos de IA. Recarga la página.", true);
-            }
-        }
-
-
-        async function startWebcam() {
-            if (webcamRunning) return;
-
-            startBtn.style.display = 'none';
-            showMessage("Iniciando cámara...");
-
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }
-                });
-                video.srcObject = stream;
-                
-                video.play(); 
-                
-                video.addEventListener('loadeddata', () => {
-                    webcamRunning = true;
-                    uiContainer.style.display = 'flex'; 
-                    messageBox.style.display = 'none';
-                    renderLoop();
-                });
-            
-            } catch (err) {
-                console.error("Error al acceder a la cámara:", err.name, err.message);
-                if (err.name === "NotAllowedError") {
-                    showMessage("Bloqueaste el permiso de la cámara. Recarga y acepta para continuar.", true);
-                } else if (err.name === "NotFoundError") {
-                    showMessage("No se encontró una cámara. Asegúrate de tener una conectada.", true);
-                } else {
-                    showMessage(`Error de cámara: ${err.message}`, true);
-                }
-            }
-        }
-
-        async function renderLoop() {
-            if (!webcamRunning || video.readyState < 2) {
-                requestAnimationFrame(renderLoop);
-                return;
-            }
-
-            requestAnimationFrame(renderLoop);
-            
-            if (video.videoWidth !== video.videoWidth) {
-                onWindowResize(); // Actualiza el aspect ratio si cambia el video
-            }
-
-            aspect = video.videoWidth / video.videoHeight;
-            
-            if (threeCamera.aspect !== aspect) {
-                threeCamera.aspect = aspect;
-                const fov = 45; 
-                threeCamera.fov = (2 * Math.atan(Math.tan(fov * Math.PI / 180 / 2) / aspect) * 180 / Math.PI);
-                threeCamera.updateProjectionMatrix();
-            }
-
-
-            const videoTime = video.currentTime;
-            
-            anchorGroup.visible = false;
-            
-            try {
-                if (currentJewelryType === 'ring' && handLandmarker) {
-                    const handResults = handLandmarker.detectForVideo(video, video.currentTime);
-                    if (handResults.landmarks.length > 0) {
-                        const landmarks = handResults.landmarks[0];
-                        updateAnchor3D(
-                            landmarks[LANDMARKS.RING_FINGER_MCP], 
-                            landmarks[LANDMARKS.RING_FINGER_PIP]
-                        );
-                        anchorGroup.visible = true;
-                    }
-                } 
-                else if (currentJewelryType === 'earring' && faceLandmarker) {
-                    const faceResults = faceLandmarker.detectForVideo(video, video.currentTime);
-                    if (faceResults.faceLandmarks.length > 0) {
-                        const landmarks = faceResults.faceLandmarks[0];
-                        updateAnchor3D(
-                            landmarks[LANDMARKS.LEFT_EAR_LOBE], 
-                            landmarks[LANDMARKS.LEFT_EAR_TOP],
-                            0.02 // Escala fija pequeña para aros
-                        );
-                        anchorGroup.visible = true;
-                    }
-                }
-                else if (currentJewelryType === 'pendant' && poseLandmarker) {
-                    const poseResults = poseLandmarker.detectForVideo(video, video.currentTime);
-                    if (poseResults.landmarks.length > 0) {
-                        const landmarks = poseResults.landmarks[0];
-                        const p1 = landmarks[LANDMARKS.LEFT_SHOULDER];
-                        const p2 = landmarks[LANDMARKS.RIGHT_SHOULDER];
-                        const midShoulder = {
-                            x: (p1.x + p2.x) / 2,
-                            y: (p1.y + p2.y) / 2,
-                            z: (p1.z + p2.z) / 2,
-                        };
-                        updateAnchor3D(midShoulder, null, 0.2); // Escala fija grande
-                        anchorGroup.visible = true;
-                    }
-                }
-
-            } catch (error) {
-                console.error("Error en el bucle de detección:", error);
-            }
-
-            threeRenderer.render(threeScene, threeCamera);
-        }
-
-        
-        function setJewelryType(type) {
-            currentJewelryType = type;
-            document.querySelectorAll('.joya-btn').forEach(btn => btn.classList.remove('active'));
-            const activeBtn = document.getElementById(`btn-${type}`);
-            if (activeBtn) activeBtn.classList.add('active');
-            jewelryGroup.clear();
-            if (type === 'none') {
-                return;
-            }
-            const newJewel = createPlaceholderJewelry(type);
-            jewelryGroup.add(newJewel);
-        }
-
-        function createPlaceholderJewelry(type) {
-            let mesh;
-            jewelryGroup.rotation.set(0, 0, 0);
-            jewelryGroup.scale.set(1, 1, 1);
-            switch(type) {
-                case 'ring':
-                    mesh = new THREE.Mesh(
-                        new THREE.TorusGeometry(0.5, 0.1, 16, 32),
-                        metalMaterial
-                    );
-                    mesh.rotation.x = Math.PI / 2;
-                    break;
-                case 'earring':
-                    mesh = new THREE.Mesh(
-                        new THREE.CapsuleGeometry(0.2, 1.0, 4, 8),
-                        metalMaterial
-                    );
-                    break;
-                case 'pendant':
-                    mesh = new THREE.Mesh(
-                        new THREE.ConeGeometry(0.5, 1.5, 32),
-                        metalMaterial
-                    );
-                    mesh.rotation.x = Math.PI;
-                    break;
-                default:
-                    return new THREE.Group();
-            }
-            return mesh;
-        }
-
-        
-        function updateAnchor3D(p1, p2, fixedScale = null) {
-            
-            const ndcX = (p1.x * 2) - 1;
-            const ndcY = 1 - (p1.y * 2);
-
-            let zPos = -10; 
-
-            const posVec = new THREE.Vector3(ndcX, ndcY, 0.5); 
-            
-            posVec.unproject(threeCamera);
-            posVec.sub(threeCamera.position).normalize();
-            posVec.multiplyScalar(-zPos / posVec.z); 
-            
-            anchorGroup.position.copy(posVec.add(threeCamera.position));
-
-            // Calcular escala
-            let scale = 0.05; 
-            if (fixedScale) {
-                scale = fixedScale;
-            } else if (p2) {
-                const p1Vec = new THREE.Vector3((p1.x * 2) - 1, 1 - (p1.y * 2), p1.z);
-                const p2Vec = new THREE.Vector3((p2.x * 2) - 1, 1 - (p2.y * 2), p2.z);
-                const distance = p1Vec.distanceTo(p2Vec);
-                scale = distance * 0.2; // Ajustar este multiplicador
-            }
-
-            if (currentJewelryType === 'ring') scale *= 0.5;
-            if (currentJewelryType === 'earring') scale *= 0.2;
-            if (currentJewelryType === 'pendant') scale *= 1.5;
-            
-            scale = Math.max(0.01, Math.min(scale, 5.0));
-            anchorGroup.scale.set(scale, scale, scale);
-            
-            if (currentJewelryType === 'ring' && p2) {
-                const p2Vec = new THREE.Vector3((p2.x * 2) - 1, 1 - (p2.y * 2), 0.5).unproject(threeCamera);
-                p2Vec.sub(threeCamera.position).normalize().multiplyScalar(-zPos / p2Vec.z);
-                anchorGroup.lookAt(p2Vec.add(threeCamera.position));
-                jewelryGroup.rotation.x = Math.PI / 2; // Re-orientar el torus
-            } else {
-                // Asegurarse de que los otros objetos miren a la cámara
-                anchorGroup.lookAt(threeCamera.position);
-            }
-        }
-
-
-        function showMessage(text, isError = false) {
-            messageBox.innerText = text;
-            messageBox.style.display = 'block';
-            messageBox.style.color = isError ? '#ffaaaa' : '#ffffff';
-        }
-
-        function onWindowResize() {
-            aspect = window.innerWidth / window.innerHeight;
-            threeCamera.aspect = aspect;
-            threeCamera.updateProjectionMatrix();
-            threeRenderer.setSize(window.innerWidth, window.innerHeight);
-        }
-
-        // Iniciar la aplicación
-        init();
-
-    </script>
+    </div> <!-- fin de .catalogo-container -->
 
 </body>
 </html>
-
